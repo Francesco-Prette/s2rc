@@ -37,6 +37,7 @@ pico_sdk_init()
 
 add_executable(s2rc
 src/main.c
+src/usb_descriptors.c
 
 src/usb_host/usb_host_init.c
 src/usb_host/usb_host_drivers.c
@@ -47,6 +48,9 @@ src/input/input_hid_generic.c
 src/output/output_switch.c
 
 src/mapping/mapper.c
+
+src/driver/switch_driver.c
+src/driver/hid_callbacks.c
 )
 
 pico_set_program_name(s2rc "s2rc")

@@ -10,5 +10,3 @@
 #define CFG_TUD_MSC              0
 #define CFG_TUD_MIDI             0
 #define CFG_TUD_VENDOR           0
-
-#define CFG_TUD_HID_EP_BUFSIZE   64
