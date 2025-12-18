@@ -6,6 +6,6 @@ typedef struct {
     int16_t ly;
     int16_t rx;
     int16_t ry;
-    uint16_t buttons;
+    uint16_t buttons[2];
     uint8_t hat;
 } ControllerState;

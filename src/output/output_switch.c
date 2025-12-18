@@ -17,7 +17,8 @@ void switch_send_report(const SwitchReport *r) {
 
     switch_hid_report_t rep;
     rep.report_id = SWITCH_REPORT_ID;
-    rep.buttons   = r->buttons;
+    uint16_t buttons = r->buttons[0] | (r->buttons[1] << 8);
+    rep.buttons   = buttons;
     rep.hat       = (r->hat & 0x0F);
 
     rep.lx = r->lx + 128;

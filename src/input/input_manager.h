@@ -1,20 +1,10 @@
 #ifndef INPUT_MANAGER_H
 #define INPUT_MANAGER_H
 
-
 #include <stdint.h>
-
-
-typedef struct {
-uint8_t buttons[32];
-int16_t lx, ly;
-int16_t rx, ry;
-uint8_t lt, rt;
-} ControllerState;
-
+#include "controller_state.h"
 
 void input_init();
-ControllerState input_read();
-
+ControllerState input_read(void);
 
 #endif

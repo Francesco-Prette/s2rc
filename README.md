@@ -19,7 +19,6 @@ Goal: Read a controller connected on a USB-A port (host mode) and present a Nint
 - src/mapping/mapper.h
 - src/output/output_switch.c
 - src/output/output_switch.h
-- src/output/switch_hid_report.h
 
 
 ## Quick build (Linux, with Pico SDK installed)
@@ -32,8 +31,8 @@ Goal: Read a controller connected on a USB-A port (host mode) and present a Nint
 ```bash
 mkdir build
 cd build
-cmake ..
-make -j4
+cmake -G "MinGW Makefiles" ..
+make
 ```
 
 
