@@ -1,0 +1,31 @@
+UART Debugging Notes
+====================
+
+Problem: Only 8 bits work at a time via UART
+
+Observations:
+1. With original byte order: uart_buffer[0] | (uart_buffer[1] << 8)
+   - Bits 8-13 work (MINUS, PLUS, stick clicks, HOME, CAPTURE)
+   - Bits 0-7 don't work
+
+2. With swapped byte order: uart_buffer[1] | (uart_buffer[0] << 8)
+   - Bits 0-7 work (B, A, Y, X, L, R, ZL, ZR)
+   - Bits 8-15 don't work
+
+3. TEST_MODE (no UART) works perfectly with all buttons
+
+Hypothesis:
+- Python sends: struct.pack('<H', buttons) = [low_byte, high_byte]
+- UART buffer receives bytes sequentially
+- Only ONE of the two bytes is being received properly
+
+Possible causes:
+1. Buffer synchronization - we start reading mid-packet
+2. UART baud rate mismatch
+3. UART FIFO settings
+4. Packet framing - no header/footer to sync on
+
+Solution needed:
+- Add packet synchronization (header byte)
+- Or verify both bytes are being received
+- Or add debug output to see what's in uart_buffer[0] and uart_buffer[1]
