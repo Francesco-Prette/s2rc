@@ -188,5 +188,4 @@ Based on TinyUSB examples and Pico SDK. See respective licenses.
 
 ## Author
 
-Francesco Prette with some AI help
-Special thanks to the project GP2040-CE
+Francesco Prette with some AI help. Special thanks to the project GP2040-CE
