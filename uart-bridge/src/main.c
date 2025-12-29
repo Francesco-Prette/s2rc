@@ -71,49 +71,74 @@ static controller_state_t kbd_state = {0};
 static controller_state_t last_sent_state = {0};
 static uint32_t last_send_time = 0;
 
+// Key mapping types
+#define MAP_BUTTON 0
+#define MAP_DPAD   1
+#define MAP_LSTICK 2
+#define MAP_RSTICK 3
+
+// Stick direction flags
+#define STICK_UP    (1 << 0)
+#define STICK_DOWN  (1 << 1)
+#define STICK_LEFT  (1 << 2)
+#define STICK_RIGHT (1 << 3)
+
 // Configurable key mappings (HID keycodes)
 typedef struct {
     uint8_t key;
     uint16_t button;
     uint8_t hat;
-    bool is_button;  // true for button, false for dpad
+    uint8_t stick_dir;  // For analog stick directions
+    uint8_t map_type;   // MAP_BUTTON, MAP_DPAD, MAP_LSTICK, MAP_RSTICK
 } key_mapping_t;
 
-// Default keyboard mappings (WASD + IJKL layout)
+// Default keyboard mappings (WASD + IJKL layout + analog stick controls)
 static key_mapping_t key_mappings[] = {
     // D-Pad: WASD
-    {HID_KEY_W, 0, DPAD_UP, false},
-    {HID_KEY_S, 0, DPAD_DOWN, false},
-    {HID_KEY_A, 0, DPAD_LEFT, false},
-    {HID_KEY_D, 0, DPAD_RIGHT, false},
+    {HID_KEY_W, 0, DPAD_UP, 0, MAP_DPAD},
+    {HID_KEY_S, 0, DPAD_DOWN, 0, MAP_DPAD},
+    {HID_KEY_A, 0, DPAD_LEFT, 0, MAP_DPAD},
+    {HID_KEY_D, 0, DPAD_RIGHT, 0, MAP_DPAD},
     
     // Face buttons: IJKL
-    {HID_KEY_I, BTN_X, 0, true},     // I -> X (top)
-    {HID_KEY_K, BTN_B, 0, true},     // K -> B (right)
-    {HID_KEY_J, BTN_Y, 0, true},     // J -> Y (left)
-    {HID_KEY_L, BTN_A, 0, true},     // L -> A (bottom)
+    {HID_KEY_I, BTN_X, 0, 0, MAP_BUTTON},     // I -> X (top)
+    {HID_KEY_K, BTN_B, 0, 0, MAP_BUTTON},     // K -> B (right)
+    {HID_KEY_J, BTN_Y, 0, 0, MAP_BUTTON},     // J -> Y (left)
+    {HID_KEY_L, BTN_A, 0, 0, MAP_BUTTON},     // L -> A (bottom)
     
     // Shoulders: Q E R F (and G T as alternatives)
-    {HID_KEY_Q, BTN_L, 0, true},
-    {HID_KEY_E, BTN_R, 0, true},
-    {HID_KEY_R, BTN_ZL, 0, true},
-    {HID_KEY_F, BTN_ZR, 0, true},
-    {HID_KEY_G, BTN_L, 0, true},     // G -> L (alternative)
-    {HID_KEY_T, BTN_R, 0, true},     // T -> R (alternative)
+    {HID_KEY_Q, BTN_L, 0, 0, MAP_BUTTON},
+    {HID_KEY_E, BTN_R, 0, 0, MAP_BUTTON},
+    {HID_KEY_R, BTN_ZL, 0, 0, MAP_BUTTON},
+    {HID_KEY_F, BTN_ZR, 0, 0, MAP_BUTTON},
+    {HID_KEY_G, BTN_L, 0, 0, MAP_BUTTON},     // G -> L (alternative)
+    {HID_KEY_T, BTN_R, 0, 0, MAP_BUTTON},     // T -> R (alternative)
     
     // System buttons
-    {HID_KEY_1, BTN_MINUS, 0, true},
-    {HID_KEY_2, BTN_PLUS, 0, true},
-    {HID_KEY_3, BTN_LSTICK, 0, true},
-    {HID_KEY_4, BTN_RSTICK, 0, true},
-    {HID_KEY_H, BTN_HOME, 0, true},
-    {HID_KEY_C, BTN_CAPTURE, 0, true},
+    {HID_KEY_1, BTN_MINUS, 0, 0, MAP_BUTTON},
+    {HID_KEY_2, BTN_PLUS, 0, 0, MAP_BUTTON},
+    {HID_KEY_3, BTN_LSTICK, 0, 0, MAP_BUTTON},
+    {HID_KEY_4, BTN_RSTICK, 0, 0, MAP_BUTTON},
+    {HID_KEY_H, BTN_HOME, 0, 0, MAP_BUTTON},
+    {HID_KEY_C, BTN_CAPTURE, 0, 0, MAP_BUTTON},
     
     // Arrow keys as alternative dpad
-    {HID_KEY_ARROW_UP, 0, DPAD_UP, false},
-    {HID_KEY_ARROW_DOWN, 0, DPAD_DOWN, false},
-    {HID_KEY_ARROW_LEFT, 0, DPAD_LEFT, false},
-    {HID_KEY_ARROW_RIGHT, 0, DPAD_RIGHT, false},
+    {HID_KEY_ARROW_UP, 0, DPAD_UP, 0, MAP_DPAD},
+    {HID_KEY_ARROW_DOWN, 0, DPAD_DOWN, 0, MAP_DPAD},
+    {HID_KEY_ARROW_LEFT, 0, DPAD_LEFT, 0, MAP_DPAD},
+    {HID_KEY_ARROW_RIGHT, 0, DPAD_RIGHT, 0, MAP_DPAD},
+    
+    // Left Analog Stick: Numpad 8456
+    {HID_KEY_KEYPAD_8, 0, 0, STICK_UP, MAP_LSTICK},      // Numpad 8 -> Left stick up
+    {HID_KEY_KEYPAD_5, 0, 0, STICK_DOWN, MAP_LSTICK},    // Numpad 5 -> Left stick down
+    {HID_KEY_KEYPAD_4, 0, 0, STICK_LEFT, MAP_LSTICK},    // Numpad 4 -> Left stick left
+    {HID_KEY_KEYPAD_6, 0, 0, STICK_RIGHT, MAP_LSTICK},   // Numpad 6 -> Left stick right
+    
+    // Right Analog Stick: UHJK  
+    {HID_KEY_U, 0, 0, STICK_UP, MAP_RSTICK},     // U -> Right stick up
+    {HID_KEY_M, 0, 0, STICK_DOWN, MAP_RSTICK},   // M -> Right stick down
+    {HID_KEY_N, 0, 0, STICK_LEFT, MAP_RSTICK},   // N -> Right stick left
+    {HID_KEY_COMMA, 0, 0, STICK_RIGHT, MAP_RSTICK}, // , -> Right stick right
 };
 
 #define NUM_KEY_MAPPINGS (sizeof(key_mappings) / sizeof(key_mappings[0]))
@@ -135,7 +160,9 @@ void print_help() {
     printf("   Buttons: I=X, K=B, J=Y, L=A\n");
     printf("   Shoulders: Q/G=L, E/T=R, R=ZL, F=ZR\n");
     printf("   System: 1=-, 2=+, 3=LS, 4=RS, H=Home, C=Capture\n");
-    printf("   ** Hold keys to keep buttons pressed! **\n");
+    printf("   Left Stick: Numpad 8456 (Up/Down/Left/Right)\n");
+    printf("   Right Stick: U M N , (Up/Down/Left/Right)\n");
+    printf("   ** Hold keys to keep buttons/sticks pressed! **\n");
     printf("\nType 'help' to see this message again\n");
     printf("=========================================\n\n");
 }
@@ -198,7 +225,15 @@ void process_keyboard_report(hid_keyboard_report_t const *report) {
     kbd_state.buttons = 0;
     kbd_state.hat = DPAD_NEUTRAL;
     
+    // Reset analog sticks to center
+    kbd_state.lx = 128;
+    kbd_state.ly = 128;
+    kbd_state.rx = 128;
+    kbd_state.ry = 128;
+    
     uint8_t dpad_up = 0, dpad_down = 0, dpad_left = 0, dpad_right = 0;
+    uint8_t lstick_dirs = 0;  // Bit flags for left stick directions
+    uint8_t rstick_dirs = 0;  // Bit flags for right stick directions
     
     // Check each pressed key (up to 6 simultaneous keys)
     for (uint8_t i = 0; i < 6; i++) {
@@ -208,16 +243,28 @@ void process_keyboard_report(hid_keyboard_report_t const *report) {
         // Look up key in mappings
         for (uint8_t j = 0; j < NUM_KEY_MAPPINGS; j++) {
             if (key_mappings[j].key == keycode) {
-                if (key_mappings[j].is_button) {
-                    kbd_state.buttons |= key_mappings[j].button;
-                } else {
-                    // D-Pad handling - track individual directions
-                    switch (key_mappings[j].hat) {
-                        case DPAD_UP: dpad_up = 1; break;
-                        case DPAD_DOWN: dpad_down = 1; break;
-                        case DPAD_LEFT: dpad_left = 1; break;
-                        case DPAD_RIGHT: dpad_right = 1; break;
-                    }
+                switch (key_mappings[j].map_type) {
+                    case MAP_BUTTON:
+                        kbd_state.buttons |= key_mappings[j].button;
+                        break;
+                        
+                    case MAP_DPAD:
+                        // D-Pad handling - track individual directions
+                        switch (key_mappings[j].hat) {
+                            case DPAD_UP: dpad_up = 1; break;
+                            case DPAD_DOWN: dpad_down = 1; break;
+                            case DPAD_LEFT: dpad_left = 1; break;
+                            case DPAD_RIGHT: dpad_right = 1; break;
+                        }
+                        break;
+                        
+                    case MAP_LSTICK:
+                        lstick_dirs |= key_mappings[j].stick_dir;
+                        break;
+                        
+                    case MAP_RSTICK:
+                        rstick_dirs |= key_mappings[j].stick_dir;
+                        break;
                 }
                 break;
             }
@@ -243,6 +290,32 @@ void process_keyboard_report(hid_keyboard_report_t const *report) {
         kbd_state.hat = DPAD_RIGHT;
     } else {
         kbd_state.hat = DPAD_NEUTRAL;
+    }
+    
+    // Calculate left stick position from direction flags
+    if (lstick_dirs & STICK_UP) {
+        kbd_state.ly = 0;  // Y-axis inverted: 0 = up
+    } else if (lstick_dirs & STICK_DOWN) {
+        kbd_state.ly = 255;  // Y-axis inverted: 255 = down
+    }
+    
+    if (lstick_dirs & STICK_LEFT) {
+        kbd_state.lx = 0;  // 0 = left
+    } else if (lstick_dirs & STICK_RIGHT) {
+        kbd_state.lx = 255;  // 255 = right
+    }
+    
+    // Calculate right stick position from direction flags
+    if (rstick_dirs & STICK_UP) {
+        kbd_state.ry = 0;  // Y-axis inverted: 0 = up
+    } else if (rstick_dirs & STICK_DOWN) {
+        kbd_state.ry = 255;  // Y-axis inverted: 255 = down
+    }
+    
+    if (rstick_dirs & STICK_LEFT) {
+        kbd_state.rx = 0;  // 0 = left
+    } else if (rstick_dirs & STICK_RIGHT) {
+        kbd_state.rx = 255;  // 255 = right
     }
 }
 
@@ -296,7 +369,11 @@ void update_keyboard_state() {
     
     // Send updates at ~125Hz (8ms) if state changed, or every 100ms to maintain connection
     bool state_changed = (kbd_state.buttons != last_sent_state.buttons) || 
-                         (kbd_state.hat != last_sent_state.hat);
+                         (kbd_state.hat != last_sent_state.hat) ||
+                         (kbd_state.lx != last_sent_state.lx) ||
+                         (kbd_state.ly != last_sent_state.ly) ||
+                         (kbd_state.rx != last_sent_state.rx) ||
+                         (kbd_state.ry != last_sent_state.ry);
     
     if (state_changed || (now - last_send_time >= 100)) {
         send_controller_state(&kbd_state);
@@ -305,7 +382,9 @@ void update_keyboard_state() {
         
         if (state_changed) {
             gpio_put(PICO_DEFAULT_LED_PIN, 1);
-            printf("[KBD] Buttons=0x%04X Hat=%d\n", kbd_state.buttons, kbd_state.hat);
+            printf("[KBD] Buttons=0x%04X Hat=%d LX=%d LY=%d RX=%d RY=%d\n", 
+                   kbd_state.buttons, kbd_state.hat,
+                   kbd_state.lx, kbd_state.ly, kbd_state.rx, kbd_state.ry);
         }
     }
 }

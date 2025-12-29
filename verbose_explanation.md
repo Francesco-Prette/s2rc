@@ -24,7 +24,7 @@ This project enables remote control of a Nintendo Switch using two Raspberry Pi 
                  │ (GP1 RX ← GP0 TX)
                  ↓
 ┌────────────────────────────────────────────────────────────┐
-│  Pico #2: simple-s2rc (Switch Controller)                  │
+│  Pico #2: s2rc (Switch Controller)                  │
 │  - Receives UART commands from bridge                      │
 │  - Emulates HORI controller (officially licensed)          │
 │  - Sends HID reports to Switch @ 125Hz                     │
@@ -40,7 +40,7 @@ This project enables remote control of a Nintendo Switch using two Raspberry Pi 
 ## Repository Details
 
 ### 1. uart-bridge
-**Location:** `c:\Users\francesco.prette\repos\personal\uart-bridge`
+**Location:** `~\repos\personal\s2rc\uart-bridge`
 
 **Purpose:** Acts as the input bridge that converts multiple input sources into controller commands.
 
@@ -48,7 +48,7 @@ This project enables remote control of a Nintendo Switch using two Raspberry Pi 
 - **Dual Input Modes:**
   - USB Keyboard support (via USB OTG adapter)
   - Serial text commands from PC
-- **Keyboard Layout:** WASD/Arrow keys for D-Pad, IJKL for face buttons
+- **Keyboard Layout:** WASD/Arrow keys for D-Pad, jkui for face buttons
 - **Key Holding Support:** Keys can be held down continuously
 - **Simultaneous Inputs:** Up to 6 keys at once (USB keyboard limitation)
 - **LED Feedback:** Blinks when commands are sent
@@ -74,8 +74,8 @@ cmake --build .
 # Flash build/uart_bridge.uf2 to Pico
 ```
 
-### 2. simple-s2rc (Simple Switch to Remote Control)
-**Location:** `c:\Users\francesco.prette\repos\personal\simple-s2rc`
+### 2. s2rc (Simple Switch to Remote Control)
+**Location:** `~\repos\personal\s2rc`
 
 **Purpose:** Emulates a Nintendo Switch controller and communicates with the Switch console.
 
@@ -99,7 +99,7 @@ cmake --build .
 
 **Build:**
 ```powershell
-cd simple-s2rc
+cd s2rc
 mkdir build
 cd build
 cmake ..
@@ -353,8 +353,8 @@ cd build
 cmake ..
 cmake --build .
 
-# Build simple-s2rc
-cd ..\..\simple-s2rc
+# Build s2rc
+cd ..\..\s2rc
 mkdir build
 cd build
 cmake ..
@@ -428,26 +428,22 @@ Based on Pico SDK examples and TinyUSB. See respective component licenses.
 
 ```
 personal/
-├── uart-bridge/              # Bridge/Sender Pico firmware
-│   ├── src/
-│   │   ├── main.c           # Main bridge logic with USB host
-│   │   └── tusb_config.h    # TinyUSB host config
-│   ├── CMakeLists.txt
-│   ├── README.md
-│   ├── keyboard_to_serial.py
-│   └── uart_monitor.py
-│
-├── simple-s2rc/              # Switch Controller Pico firmware
+├── s2rc/              # Switch Controller Pico firmware
 │   ├── src/
 │   │   ├── main.c           # Main controller logic with UART receiver
 │   │   ├── usb_descriptors.c # HORI controller descriptors
 │   │   └── hid_callbacks.c   # HID report handling
 │   ├── CMakeLists.txt
 │   ├── tusb_config.h         # TinyUSB device config
-│   └── README.md
-│
-└── GP2040-CE/                # Separate project (not part of this system)
-    └── UART_SWITCH_CONTROLLER_PROJECT.md  # This file
+│   ├── README.md
+|   └── uart-bridge/              # Bridge/Sender Pico firmware
+│      ├── src/
+│      │   ├── main.c           # Main bridge logic with USB host
+│      │   └── tusb_config.h    # TinyUSB host config
+│      ├── CMakeLists.txt
+│      ├── README.md
+│      ├── keyboard_to_serial.py
+│      └── uart_monitor.py
 ```
 
 ## Quick Start Guide
@@ -461,7 +457,7 @@ personal/
 
 **Pico #2 (Controller):**
 1. Hold BOOTSEL button while plugging into USB
-2. Copy `simple-s2rc/build/s2rc.uf2` to Pico drive
+2. Copy `s2rc/build/s2rc.uf2` to Pico drive
 3. Wait for auto-reboot
 
 ### 2. Wire the Connection
