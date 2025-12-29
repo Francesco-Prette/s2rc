@@ -101,8 +101,13 @@ jobs:
         For installation instructions, see the GitHub repository.
         EOF
     
+    - name: List Release Files Before Upload
+      run: |
+        echo "Files to be uploaded:"
+        find release -type f -ls
+    
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         name: Release ${{ github.ref_name }}
         body: |
@@ -120,9 +125,8 @@ jobs:
           
           ### Full Documentation
           See the [README](https://github.com/${{ github.repository }}) for complete setup instructions.
-        files: |
-          release/*.uf2
-          release/README.txt
+        files: release/*
+        fail_on_unmatched_files: true
         draft: false
         prerelease: false
       env:
