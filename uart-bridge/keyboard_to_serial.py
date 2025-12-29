@@ -54,22 +54,22 @@ DPAD_NEUTRAL   = 0x08  # Neutral state (matching GP2040-CE SWITCH_HAT_NOTHING)
 # Key mappings (customize these to your preference!)
 KEY_MAPPINGS = {
     # D-Pad: WASD
-    'w': ('dpad', 'up'),
-    's': ('dpad', 'down'),
-    'a': ('dpad', 'left'),
-    'd': ('dpad', 'right'),
+    # 'e': ('dpad', 'up'),
+    # 'd': ('dpad', 'down'),
+    # 'w': ('dpad', 'left'),
+    # 'r': ('dpad', 'right'),
     
     # Face buttons: IJKL
-    'i': ('button', BTN_X),      # I -> X (top)
-    'k': ('button', BTN_B),      # K -> B (right)
-    'j': ('button', BTN_Y),      # J -> Y (left)
-    'l': ('button', BTN_A),      # L -> A (bottom)
+    'u': ('button', BTN_X),      # I -> X (top)
+    'i': ('button', BTN_B),      # K -> Y (left)
+    'j': ('button', BTN_Y),      # J -> A (right)
+    'k': ('button', BTN_A),      # L -> B (bottom)
     
     # Shoulders: QERF
-    'q': ('button', BTN_L),
-    'e': ('button', BTN_R),
-    'r': ('button', BTN_ZL),
-    'f': ('button', BTN_ZR),
+    'l': ('button', BTN_L),
+    'f': ('button', BTN_R),
+    't': ('button', BTN_ZL),
+    's': ('button', BTN_ZR),
     
     # Grip/Back buttons: ZX
     'z': ('button', BTN_GL),
@@ -88,6 +88,20 @@ KEY_MAPPINGS = {
     keyboard.Key.down: ('dpad', 'down'),
     keyboard.Key.left: ('dpad', 'left'),
     keyboard.Key.right: ('dpad', 'right'),
+    
+    # Left Analog Stick: Numpad (matching C firmware)
+    # Note: pynput doesn't support numpad keys easily, so we use alternatives
+    # You can customize these keys if needed
+    'e': ('lstick', 'up'),      # Alternative for numpad 8
+    'd': ('lstick', 'down'),    # Alternative for numpad 5
+    'w': ('lstick', 'left'),    # Alternative for numpad 4
+    'r': ('lstick', 'right'),   # Alternative for numpad 6
+    
+    # Right Analog Stick: (matching C firmware conceptually)
+    'g': ('rstick', 'up'),      # Alternative mapping
+    'v': ('rstick', 'down'),    # Alternative mapping
+    'a': ('rstick', 'left'),    # Alternative mapping
+    'y': ('rstick', 'right'),   # Alternative mapping
 }
 
 class ControllerState:
@@ -98,10 +112,53 @@ class ControllerState:
         self.dpad_down = False
         self.dpad_left = False
         self.dpad_right = False
+        
+        # Analog stick direction flags
+        self.lstick_up = False
+        self.lstick_down = False
+        self.lstick_left = False
+        self.lstick_right = False
+        self.rstick_up = False
+        self.rstick_down = False
+        self.rstick_left = False
+        self.rstick_right = False
+        
         self.lx = 128  # Center
         self.ly = 128  # Center
         self.rx = 128  # Center
         self.ry = 128  # Center
+    
+    def update_stick_positions(self):
+        """Calculate stick positions from direction flags"""
+        # Left stick
+        if self.lstick_up:
+            self.ly = 0  # Y-axis inverted: 0 = up
+        elif self.lstick_down:
+            self.ly = 255  # Y-axis inverted: 255 = down
+        else:
+            self.ly = 128  # Center
+        
+        if self.lstick_left:
+            self.lx = 0  # 0 = left
+        elif self.lstick_right:
+            self.lx = 255  # 255 = right
+        else:
+            self.lx = 128  # Center
+        
+        # Right stick
+        if self.rstick_up:
+            self.ry = 0  # Y-axis inverted: 0 = up
+        elif self.rstick_down:
+            self.ry = 255  # Y-axis inverted: 255 = down
+        else:
+            self.ry = 128  # Center
+        
+        if self.rstick_left:
+            self.rx = 0  # 0 = left
+        elif self.rstick_right:
+            self.rx = 255  # 255 = right
+        else:
+            self.rx = 128  # Center
     
     def get_hat(self):
         """Calculate HAT value from individual D-pad directions"""
@@ -153,7 +210,9 @@ class KeyboardController:
         print("  Shoulders: Q=L, E=R, R=ZL, F=ZR")
         print("  Grip/Back: Z=GL, X=GR")
         print("  System: 1=-, 2=+, 3=LS, 4=RS, H=Home, C=Capture")
-        print("\n** Hold keys to keep buttons pressed! **")
+        print("  Left Stick: O/P/N/B (Up/Down/Left/Right)")
+        print("  Right Stick: G/V/A/Y (Up/Down/Left/Right)")
+        print("\n** Hold keys to keep buttons/sticks pressed! **")
         print("\nPress ESC to quit")
         print("="*60 + "\n")
         
@@ -207,6 +266,30 @@ class KeyboardController:
                     self.state.dpad_right = True
                 print(f"[KEY PRESS] {key_char} -> D-Pad {mapping_value}")
             
+            elif mapping_type == 'lstick':
+                if mapping_value == 'up':
+                    self.state.lstick_up = True
+                elif mapping_value == 'down':
+                    self.state.lstick_down = True
+                elif mapping_value == 'left':
+                    self.state.lstick_left = True
+                elif mapping_value == 'right':
+                    self.state.lstick_right = True
+                self.state.update_stick_positions()
+                print(f"[KEY PRESS] {key_char} -> Left Stick {mapping_value}")
+            
+            elif mapping_type == 'rstick':
+                if mapping_value == 'up':
+                    self.state.rstick_up = True
+                elif mapping_value == 'down':
+                    self.state.rstick_down = True
+                elif mapping_value == 'left':
+                    self.state.rstick_left = True
+                elif mapping_value == 'right':
+                    self.state.rstick_right = True
+                self.state.update_stick_positions()
+                print(f"[KEY PRESS] {key_char} -> Right Stick {mapping_value}")
+            
             self.send_state()
     
     def on_release(self, key):
@@ -237,6 +320,30 @@ class KeyboardController:
                     self.state.dpad_right = False
                 print(f"[KEY RELEASE] {key_char}")
             
+            elif mapping_type == 'lstick':
+                if mapping_value == 'up':
+                    self.state.lstick_up = False
+                elif mapping_value == 'down':
+                    self.state.lstick_down = False
+                elif mapping_value == 'left':
+                    self.state.lstick_left = False
+                elif mapping_value == 'right':
+                    self.state.lstick_right = False
+                self.state.update_stick_positions()
+                print(f"[KEY RELEASE] {key_char}")
+            
+            elif mapping_type == 'rstick':
+                if mapping_value == 'up':
+                    self.state.rstick_up = False
+                elif mapping_value == 'down':
+                    self.state.rstick_down = False
+                elif mapping_value == 'left':
+                    self.state.rstick_left = False
+                elif mapping_value == 'right':
+                    self.state.rstick_right = False
+                self.state.update_stick_positions()
+                print(f"[KEY RELEASE] {key_char}")
+            
             self.send_state()
     
     def send_state(self, force=False):
@@ -258,7 +365,7 @@ class KeyboardController:
                     0x08: 'Neutral'
                 }
                 hat_name = hat_names.get(hat, f'Unknown(0x{hat:02X})')
-                print(f"[SENT] Buttons=0x{self.state.buttons:04X} HAT={hat_name}")
+                # print(f"[SENT] Buttons=0x{self.state.buttons:04X} HAT={hat_name}")
     
     def run(self):
         """Main loop - keep sending state at high frequency"""
