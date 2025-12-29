@@ -68,7 +68,7 @@ Nintendo Switch
 
 ### For Pico #2 (Switch Controller):
 ```powershell
-cd C:\Users\francesco.prette\repos\personal\s2rc\build
+cd s2rc\build
 cmake ..
 cmake --build .
 ```
@@ -77,7 +77,7 @@ This creates `s2rc.uf2` - flash this to the Pico connected to the Switch.
 
 ### For Pico #1 (Bridge):
 ```powershell
-cd C:\Users\francesco.prette\repos\personal\s2rc\uart-bridge\build
+cd s2rc\uart-bridge\build
 cmake ..
 cmake --build .
 ```
@@ -189,3 +189,4 @@ Based on TinyUSB examples and Pico SDK. See respective licenses.
 ## Author
 
 Francesco Prette with some AI help
+Special thanks to the project GP2040-CE
