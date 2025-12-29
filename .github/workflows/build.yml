@@ -1,0 +1,83 @@
+name: Build Firmware
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
+    
+    - name: Install Pico SDK
+      run: |
+        cd ~
+        git clone https://github.com/raspberrypi/pico-sdk.git --branch master --depth 1
+        cd pico-sdk
+        git submodule update --init
+        echo "PICO_SDK_PATH=$HOME/pico-sdk" >> $GITHUB_ENV
+    
+    - name: Build Main Project
+      run: |
+        mkdir -p build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release
+    
+    - name: Build UART Bridge Project
+      run: |
+        cd uart-bridge
+        mkdir -p build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release
+    
+    - name: Upload Main Firmware Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: main-firmware
+        path: |
+          build/*.uf2
+          build/*.elf
+          build/*.bin
+        if-no-files-found: warn
+    
+    - name: Upload UART Bridge Firmware Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: uart-bridge-firmware
+        path: |
+          uart-bridge/build/*.uf2
+          uart-bridge/build/*.elf
+          uart-bridge/build/*.bin
+        if-no-files-found: warn
+    
+    - name: Build Summary
+      run: |
+        echo "## Build Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Main Project" >> $GITHUB_STEP_SUMMARY
+        if [ -f build/*.uf2 ]; then
+          ls -lh build/*.uf2 >> $GITHUB_STEP_SUMMARY
+        else
+          echo "No .uf2 files found" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### UART Bridge Project" >> $GITHUB_STEP_SUMMARY
+        if [ -f uart-bridge/build/*.uf2 ]; then
+          ls -lh uart-bridge/build/*.uf2 >> $GITHUB_STEP_SUMMARY
+        else
+          echo "No .uf2 files found" >> $GITHUB_STEP_SUMMARY
+        fi

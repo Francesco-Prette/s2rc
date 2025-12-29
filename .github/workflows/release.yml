@@ -1,0 +1,95 @@
+name: Release Firmware
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
+    
+    - name: Install Pico SDK
+      run: |
+        cd ~
+        git clone https://github.com/raspberrypi/pico-sdk.git --branch master --depth 1
+        cd pico-sdk
+        git submodule update --init
+        echo "PICO_SDK_PATH=$HOME/pico-sdk" >> $GITHUB_ENV
+    
+    - name: Build Main Project
+      run: |
+        mkdir -p build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release
+    
+    - name: Build UART Bridge Project
+      run: |
+        cd uart-bridge
+        mkdir -p build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release
+    
+    - name: Prepare Release Artifacts
+      run: |
+        mkdir -p release
+        # Copy main project firmware
+        if [ -f build/*.uf2 ]; then
+          cp build/*.uf2 release/ || true
+        fi
+        # Copy uart-bridge firmware
+        if [ -f uart-bridge/build/*.uf2 ]; then
+          cp uart-bridge/build/*.uf2 release/ || true
+        fi
+        # Create a README for the release
+        cat > release/README.txt << EOF
+        S2RC - Nintendo Switch Controller Firmware
+        Version: ${GITHUB_REF_NAME}
+        Build Date: $(date)
+        
+        Files:
+        - Main firmware: Flash to your Switch-connected Pico
+        - UART Bridge firmware: Flash to your PC-connected Pico (for keyboard input)
+        
+        For installation instructions, see the GitHub repository.
+        EOF
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ github.ref_name }}
+        body: |
+          ## S2RC Firmware Release ${{ github.ref_name }}
+          
+          ### What's Included
+          - **Main Firmware**: For the Pico connected to Nintendo Switch
+          - **UART Bridge Firmware**: For the Pico connected to your PC (enables keyboard input)
+          
+          ### Installation
+          1. Download the appropriate `.uf2` file
+          2. Hold BOOTSEL button on your Pico and connect via USB
+          3. Drag and drop the `.uf2` file to the RPI-RP2 drive
+          4. The Pico will reboot automatically
+          
+          ### Full Documentation
+          See the [README](https://github.com/${{ github.repository }}) for complete setup instructions.
+        files: |
+          release/*.uf2
+          release/README.txt
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
