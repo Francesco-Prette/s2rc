@@ -43,17 +43,51 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=Release
         cmake --build . --config Release
     
+    - name: Verify Build Outputs
+      run: |
+        echo "Checking for build outputs..."
+        echo "Main project files:"
+        ls -lh build/ || echo "No build directory found!"
+        echo ""
+        echo "UART Bridge files:"
+        ls -lh uart-bridge/build/ || echo "No uart-bridge/build directory found!"
+        echo ""
+        echo "Searching for .uf2 files:"
+        find . -name "*.uf2" -type f || echo "No .uf2 files found!"
+    
     - name: Prepare Release Artifacts
       run: |
         mkdir -p release
+        
         # Copy main project firmware
-        if [ -f build/*.uf2 ]; then
-          cp build/*.uf2 release/ || true
+        echo "Looking for main project firmware..."
+        if compgen -G "build/*.uf2" > /dev/null; then
+          cp build/*.uf2 release/
+          echo "Copied main firmware"
+        else
+          echo "Warning: No main project .uf2 files found"
         fi
+        
         # Copy uart-bridge firmware
-        if [ -f uart-bridge/build/*.uf2 ]; then
-          cp uart-bridge/build/*.uf2 release/ || true
+        echo "Looking for uart-bridge firmware..."
+        if compgen -G "uart-bridge/build/*.uf2" > /dev/null; then
+          cp uart-bridge/build/*.uf2 release/
+          echo "Copied uart-bridge firmware"
+        else
+          echo "Warning: No uart-bridge .uf2 files found"
         fi
+        
+        # Verify we have at least one firmware file
+        if [ ! -f release/*.uf2 ]; then
+          echo "ERROR: No firmware files found to release!"
+          exit 1
+        fi
+        
+        # List what we found
+        echo ""
+        echo "Release artifacts prepared:"
+        ls -lh release/
+        
         # Create a README for the release
         cat > release/README.txt << EOF
         S2RC - Nintendo Switch Controller Firmware
