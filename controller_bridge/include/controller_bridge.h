@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 /* Nintendo Switch button definitions */
 #define BTN_Y       (1 << 0)

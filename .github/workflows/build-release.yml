@@ -3,8 +3,8 @@ name: Build Multi-Platform Release
 on:
   push:
     tags:
-      - 'v*'  # Trigger on version tags like v1.0.0
-  workflow_dispatch:  # Allow manual trigger
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-windows:
@@ -25,9 +25,7 @@ jobs:
       - name: Package Windows Release
         run: |
           mkdir release
-          copy controller_bridge\build\Release\controller_bridge.exe release\
-          copy controller_bridge\config\default_config.ini release\controller_bridge.ini
-          copy controller_bridge\README.md release\
+          copy controller_bridge\build\bin\Release\controller_bridge.exe release\
       
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
@@ -44,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake libxinput-dev
+          sudo apt-get install -y build-essential cmake libxi-dev libx11-dev
       
       - name: Build controller_bridge
         run: |
