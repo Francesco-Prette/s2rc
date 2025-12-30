@@ -53,8 +53,8 @@ jobs:
       - name: Package Linux Release
         run: |
           mkdir -p release
-          ls
-          cp build/bin/controller_bridge release/
+          ls controller_bridge/build/
+          cp controller_bridge/build/bin/Release/controller_bridge release/
           chmod +x release/controller_bridge
       
       - name: Upload Linux Artifact
@@ -82,8 +82,8 @@ jobs:
       - name: Package macOS Release
         run: |
           mkdir -p release
-          ls
-          cp build/bin/controller_bridge release/
+          ls controller_bridge/
+          cp controller_bridge/controller_bridge release/
           chmod +x release/controller_bridge
       
       - name: Upload macOS Artifact
