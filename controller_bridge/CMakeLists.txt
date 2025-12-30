@@ -56,6 +56,13 @@ elseif(UNIX)
         target_link_libraries(controller_bridge PRIVATE
             udev
         )
+    else()
+        # macOS-specific frameworks
+        target_link_libraries(controller_bridge PRIVATE
+            "-framework CoreFoundation"
+            "-framework IOKit"
+            "-framework CoreGraphics"
+        )
     endif()
 endif()
 
