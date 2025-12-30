@@ -144,6 +144,8 @@ static key_mapping_t key_mappings[] = {
 #define NUM_KEY_MAPPINGS (sizeof(key_mappings) / sizeof(key_mappings[0]))
 
 void send_controller_state(controller_state_t *state) {
+    /* The controller_bridge already sends 10-byte packets with headers */
+    /* Just forward the 8-byte state as raw data - headers added by controller_bridge */
     uart_write_blocking(UART_ID, (uint8_t*)state, sizeof(controller_state_t));
 }
 

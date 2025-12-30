@@ -1,0 +1,61 @@
+# Build directories
+build/
+bin/
+obj/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+!pico_sdk_import.cmake
+
+# Compiled binaries
+*.exe
+*.out
+*.app
+*.elf
+*.bin
+*.hex
+*.uf2
+
+# Object files
+*.o
+*.obj
+*.lo
+*.slo
+
+# Libraries
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+
+# IDE files
+.vscode/
+.vs/
+*.user
+*.suo
+*.sln
+*.vcxproj*
+.idea/
+*.swp
+*.swo
+*~
+
+# Configuration files (keep template)
+controller_bridge.ini
+!config/default_config.ini
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Debug files
+*.dSYM/
+*.pdb
+*.ilk
