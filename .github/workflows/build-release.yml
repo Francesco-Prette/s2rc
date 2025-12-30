@@ -26,8 +26,6 @@ jobs:
         run: |
           mkdir release
           copy controller_bridge\build\bin\Release\controller_bridge.exe release\
-          copy controller_bridge\config\default_config.ini release\controller_bridge.ini
-          copy controller_bridge\README.md release\
       
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
@@ -55,9 +53,7 @@ jobs:
       - name: Package Linux Release
         run: |
           mkdir -p release
-          cp controller_bridge/bin/build/controller_bridge release/
-          cp controller_bridge/config/default_config.ini release/controller_bridge.ini
-          cp controller_bridge/README.md release/
+          cp controller_bridge/bin/controller_bridge release/
           chmod +x release/controller_bridge
       
       - name: Upload Linux Artifact
@@ -85,9 +81,7 @@ jobs:
       - name: Package macOS Release
         run: |
           mkdir -p release
-          cp controller_bridge/bin/build/controller_bridge release/
-          cp controller_bridge/config/default_config.ini release/controller_bridge.ini
-          cp controller_bridge/README.md release/
+          cp controller_bridge/bin/controller_bridge release/
           chmod +x release/controller_bridge
       
       - name: Upload macOS Artifact
