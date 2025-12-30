@@ -4,19 +4,19 @@ Control your Nintendo Switch and Switch 2 remotely using two Raspberry Pi Picos 
 
 ## Road map
 
-1. Support any controller input
-2. Easy binding setup + save config
-3. Use only 1 pico (USB UART TTL instead of the second pico)
-4. Turn on Switch 2 with the s2rc
-5. 3d model of the case
+- [x] Support any controller input
+- [x] Easy binding setup + save config
+- [ ] Use only 1 pico (USB UART TTL instead of the second pico)
+- [ ] Turn on Switch 2 with the s2rc
+- [ ] 3d model of the case
 
 ## Supported feature
 
-1. Controll Switch 1/2 with keyboard
-2. Turn on Switch 1 remote
-3. Key Gr/Gl for Switch 2
-4. Should work on Windows, MacOS and Linux (Tested only on Windows)
-5. Multiple controller supported
+- [x] Controll Switch 1/2 with keyboard
+- [x] Turn on Switch 1 remote
+- [ ] Key Gr/Gl for Switch 2
+- [x] Should work on Windows, MacOS and Linux (Tested only on Windows)
+- [x] Multiple controller supported (Tested on ps5 controller and xbox)
 
 ## Setup for full remote controll
 
@@ -64,26 +64,6 @@ Nintendo Switch
     To PC               To Switch
 ```
 
-## Building the Firmware
-
-### For Pico #2 (Switch Controller):
-```powershell
-cd s2rc\build
-cmake ..
-cmake --build .
-```
-
-This creates `s2rc.uf2` - flash this to the Pico connected to the Switch.
-
-### For Pico #1 (Bridge):
-```powershell
-cd s2rc\uart-bridge\build
-cmake ..
-cmake --build .
-```
-
-This creates `uart_bridge.uf2` - flash this to the Pico connected to your PC.
-
 ## UART Protocol
 
 The protocol uses **8 bytes per packet** sent at 115200 baud:
@@ -116,14 +96,68 @@ Bit 12: HOME
 Bit 13: CAPTURE
 ```
 
-## Using the Bridge Controller
+## Getting Started
 
-Once both Picos are flashed and connected:
+### Download Pre-Built Software
 
-1. Connect Pico #2 to the Nintendo Switch (should appear as "HORIPAD for Nintendo Switch")
-2. Connect Pico #1 to your PC
-3. Open a terminal and run "uart-bridge\venv\Scripts\python.exe .\keyboard_to_serial.py COM**" (where ** you have to check on device manager "ports (COM)" in windows)
-4. Keep the terminal open and you can controll the switch now
+**Controller Bridge Application** (for your PC):
+
+Download the latest release from: **[GitHub Releases](https://github.com/Francesco-Prette/s2rc/releases)**
+
+- **Windows**: `controller_bridge-windows-x64.zip`
+- **Linux**: `controller_bridge-linux-x64.tar.gz`  
+- **macOS**: `controller_bridge-macos-x64.tar.gz`
+
+**Pico Firmware** (UF2 files):
+
+Download the pre-built firmware files from the release page:
+- `s2rc.uf2` - For Pico #2 (connects to Switch)
+- `uart_bridge.uf2` - For Pico #1 (connects to PC)
+
+### Quick Setup
+
+1. **Flash the Picos**:
+   - Hold BOOTSEL button on Pico #2, plug into PC, copy `s2rc.uf2` to it
+   - Hold BOOTSEL button on Pico #1, plug into PC, copy `uart_bridge.uf2` to it
+   
+2. **Connect hardware**:
+   - Pico #2 → Nintendo Switch (appears as "HORIPAD for Nintendo Switch")
+   - Pico #1 → Your PC via USB
+   - Wire the UARTs between Picos (see Hardware Setup above)
+
+3. **Run setup wizard**:
+   ```bash
+   # Extract the downloaded zip/tar.gz, then:
+   ./controller_bridge --setup
+   ```
+   
+   The wizard will:
+   - **Ask for your COM port** (e.g., COM10 on Windows)
+   - Let you choose keyboard or controller input
+   - Configure custom button mappings
+   - Save configuration to a `.ini` file
+
+4. **Start controlling**:
+   ```bash
+   ./controller_bridge my_config.ini
+   ```
+
+Now you can control your Switch! 🎮
+
+## Using the Controller Bridge
+
+### Configuration Wizard
+
+The wizard provides an easy setup process:
+
+**Serial Port**: Prompts for your COM port automatically
+- **Windows**: COM1, COM3, COM10, etc. (check Device Manager)
+- **Linux**: /dev/ttyACM0, /dev/ttyUSB0, etc.
+- **macOS**: /dev/tty.usbmodem*
+
+**Input Modes**:
+1. **Keyboard Mode** - Map keys to Switch buttons
+2. **Controller Mode** - Use PS4/PS5/Xbox controller with optional analog stick calibration
 
 ### Commands
 
@@ -181,6 +215,52 @@ e           - Left stick full up
 - No pairing required - works immediately when plugged in and press a key
 - Low latency design suitable for real-time control
 - Can be extended to support scripting, automation, or custom input devices
+
+## Expert Only: Building from Source
+
+### Building the Pico Firmware
+
+#### Prerequisites
+- Raspberry Pi Pico SDK installed
+- CMake and build tools
+
+#### For Pico #2 (Switch Controller):
+```bash
+cd build
+cmake ..
+cmake --build .
+```
+
+This creates `s2rc.uf2` - flash this to the Pico connected to the Switch.
+
+#### For Pico #1 (Bridge):
+```bash
+cd uart-bridge/build
+cmake ..
+cmake --build .
+```
+
+This creates `uart_bridge.uf2` - flash this to the Pico connected to your PC.
+
+### Building the Controller Bridge Application
+
+#### Windows
+```bash
+cd controller_bridge
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+```
+
+#### Linux / macOS
+```bash
+cd controller_bridge
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+```
+
+The executable will be in `build/` or `build/Release/` directory.
+
+For detailed release build instructions, see [RELEASE.md](RELEASE.md).
 
 ## License
 

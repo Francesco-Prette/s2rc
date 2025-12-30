@@ -3,10 +3,7 @@ name: Release Firmware
 on:
   push:
     tags:
-      - 'v*.*.*'  # Triggers on version tags like v1.0.0
-
-permissions:
-  contents: write
+      - 'v*'
 
 jobs:
   build-and-release:

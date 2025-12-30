@@ -8,23 +8,25 @@ This project enables remote control of a Nintendo Switch using two Raspberry Pi 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Computer or USB Keyboard                                   │
-│  (Input Source)                                             │
+│  Computer (Keyboard/Controller Input)                       │
+│  - controller_bridge application (Windows/Linux/macOS)     │
+│  - Captures keyboard or gamepad input                       │
+│  - Converts to 8-byte controller state packets             │
+│  - Sends via Serial Port (e.g., COM10)                     │
 └────────────────┬────────────────────────────────────────────┘
-                 │ USB
+                 │ USB Serial @ 115200 baud
                  ↓
 ┌────────────────────────────────────────────────────────────┐
 │  Pico #1: uart-bridge (Bridge/Sender)                      │
-│  - Receives USB keyboard input (via USB OTG)               │
-│  - Receives serial text commands from PC                   │
-│  - Converts inputs to 8-byte controller state packets      │
-│  - Sends via UART @ 115200 baud                           │
+│  - Receives serial packets from PC                         │
+│  - Forwards via UART @ 115200 baud                         │
+│  - LED blinks on transmission                              │
 └────────────────┬───────────────────────────────────────────┘
                  │ UART (GP0 TX → GP1 RX)
                  │ (GP1 RX ← GP0 TX)
                  ↓
 ┌────────────────────────────────────────────────────────────┐
-│  Pico #2: s2rc (Switch Controller)                  │
+│  Pico #2: s2rc (Switch Controller)                         │
 │  - Receives UART commands from bridge                      │
 │  - Emulates HORI controller (officially licensed)          │
 │  - Sends HID reports to Switch @ 125Hz                     │
@@ -39,33 +41,77 @@ This project enables remote control of a Nintendo Switch using two Raspberry Pi 
 
 ## Repository Details
 
-### 1. uart-bridge
-**Location:** `~\repos\personal\s2rc\uart-bridge`
+### 1. controller_bridge
+**Location:** `~\repos\personal\s2rc\controller_bridge`
 
-**Purpose:** Acts as the input bridge that converts multiple input sources into controller commands.
+**Purpose:** Cross-platform PC application that captures input and sends commands to the Pico bridge via serial port.
 
 **Key Features:**
+- **Multi-Platform Support:** Windows, Linux, and macOS
+- **Interactive Setup Wizard:** Easy configuration with COM port detection
 - **Dual Input Modes:**
-  - USB Keyboard support (via USB OTG adapter)
-  - Serial text commands from PC
-- **Keyboard Layout:** WASD/Arrow keys for D-Pad, jkui for face buttons
-- **Key Holding Support:** Keys can be held down continuously
-- **Simultaneous Inputs:** Up to 6 keys at once (USB keyboard limitation)
+  - Keyboard input with customizable key mappings
+  - Controller support (PS4, PS5, Xbox) with DirectInput/XInput
+- **Analog Stick Calibration:** Improve precision with controller calibration wizard
+- **Configuration Files:** Save/load settings via INI files
+- **Auto-Release Builds:** Pre-compiled executables via GitHub Actions
+
+**Supported Controllers:**
+- Xbox controllers (XInput)
+- PlayStation 4/5 controllers (DirectInput)
+- Generic DirectInput gamepads
+- Keyboard (any standard keyboard)
+
+**Key Files:**
+- `src/main.c` - Main application with wizard and input handling
+- `src/config.c` - Configuration file parser
+- `src/platform/windows_input.c` - Windows input handling
+- `src/platform/linux_input.c` - Linux input handling
+- `src/platform/macos_input.c` - macOS input handling
+- `config/default_config.ini` - Default configuration
+
+**Setup Wizard Features:**
+- **COM Port Configuration:** Automatically prompts for serial port during setup
+- **Input Mode Selection:** Choose keyboard or controller
+- **Custom Button Mapping:** Interactive button mapping for both modes
+- **Stick Calibration:** Optional analog stick calibration for controllers
+- **Configuration Save:** Saves all settings to `.ini` file
+
+**Download Pre-Built:**
+Visit [GitHub Releases](https://github.com/Francesco-Prette/s2rc/releases) for:
+- `controller_bridge-windows-x64.zip`
+- `controller_bridge-linux-x64.tar.gz`
+- `controller_bridge-macos-x64.tar.gz`
+
+**Build from Source:**
+```bash
+cd controller_bridge
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+# Executable in build/ or build/Release/
+```
+
+### 2. uart-bridge (Pico Firmware)
+**Location:** `~\repos\personal\s2rc\uart-bridge`
+
+**Purpose:** Firmware for Pico #1 that receives serial commands from PC and forwards via UART.
+
+**Key Features:**
+- **Serial Command Reception:** Receives controller state from PC application
+- **UART Transmission:** Forwards commands to Switch controller Pico
 - **LED Feedback:** Blinks when commands are sent
 
 **Hardware:**
 - Raspberry Pi Pico
-- USB OTG adapter (for keyboard support)
 - UART pins: GP0 (TX), GP1 (RX)
+- USB connection to PC
 
 **Key Files:**
-- `src/main.c` - Main bridge firmware with keyboard and serial support
-- `src/tusb_config.h` - TinyUSB configuration for USB host
-- `keyboard_to_serial.py` - Python script for serial control
-- `uart_monitor.py` - Monitoring tool
+- `src/main.c` - Main bridge firmware
+- `src/tusb_config.h` - TinyUSB configuration
 
 **Build:**
-```powershell
+```bash
 cd uart-bridge
 mkdir build
 cd build
