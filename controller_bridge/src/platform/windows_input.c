@@ -183,10 +183,14 @@ void platform_input_poll(controller_state_t *state, config_t *config) {
     /* Poll controllers */
     if (config->enable_controller) {
         bool controller_found = false;
+        int controller_index = config->controller_index;
+        if (controller_index < 0 || controller_index > 3) {
+            controller_index = 0;
+        }
         
         /* Try XInput first (Xbox controllers) */
         XINPUT_STATE xinput_state;
-        DWORD result = XInputGetState(0, &xinput_state);
+        DWORD result = XInputGetState(controller_index, &xinput_state);
         
         if (result == ERROR_SUCCESS) {
             controller_found = true;

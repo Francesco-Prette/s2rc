@@ -68,6 +68,7 @@ bool config_load(config_t *config, const char *filename) {
     config->enable_controller = true;
     config->update_rate_hz = 1000;
     config->controller_deadzone = 10;
+    config->controller_index = 0;
     config->bindings = NULL;
     config->binding_count = 0;
     config->controller_bindings = NULL;
@@ -133,6 +134,8 @@ bool config_load(config_t *config, const char *filename) {
                 config->update_rate_hz = atoi(value);
             } else if (strcmp(key, "controller_deadzone") == 0) {
                 config->controller_deadzone = atoi(value);
+            } else if (strcmp(key, "controller_index") == 0) {
+                config->controller_index = atoi(value);
             }
         } else if (strcmp(section, "KeyBindings") == 0) {
             /* Parse binding: type:value */
@@ -275,6 +278,7 @@ bool config_create_default(const char *filename) {
     fprintf(file, "enable_controller = true\n");
     fprintf(file, "update_rate_hz = 1000\n");
     fprintf(file, "controller_deadzone = 10\n\n");
+    fprintf(file, "controller_index = 0\n\n");
     
     fprintf(file, "[KeyBindings]\n");
     fprintf(file, "# Face buttons\n");

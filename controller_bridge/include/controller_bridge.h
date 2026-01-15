@@ -114,6 +114,7 @@ typedef struct {
     bool enable_controller;
     int update_rate_hz;
     int controller_deadzone;
+    int controller_index;
     key_binding_t *bindings;
     int binding_count;
     controller_button_binding_t *controller_bindings;

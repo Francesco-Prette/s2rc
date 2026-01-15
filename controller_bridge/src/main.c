@@ -561,6 +561,7 @@ bool run_configuration_wizard(const char *output_filename) {
     fprintf(f, "enable_controller = %s\n", use_controller ? "true" : "false");
     fprintf(f, "update_rate_hz = 1000\n");
     fprintf(f, "controller_deadzone = 10\n\n");
+    fprintf(f, "controller_index = 0\n\n");
     
     if (use_controller) {
         fprintf(f, "[ControllerBindings]\n");
@@ -623,6 +624,7 @@ void print_config_info(const config_t *config) {
     printf("  Serial Port:      %s @ %d baud\n", config->serial_port, config->baud_rate);
     printf("  Keyboard Input:   %s\n", config->enable_keyboard ? "Enabled" : "Disabled");
     printf("  Controller Input: %s\n", config->enable_controller ? "Enabled" : "Disabled");
+    printf("  Controller Index: %d\n", config->controller_index);
     printf("  Update Rate:      %d Hz\n", config->update_rate_hz);
     printf("  Loaded Bindings:  %d key mappings\n", config->binding_count);
     printf("\n");
